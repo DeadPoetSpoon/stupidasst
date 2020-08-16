@@ -1,44 +1,48 @@
 <template>
-  <div>
-    <el-calendar>
-      <template
-      v-slot:dateCell="{date, data}">
-        <p>{{ data.day.split('-').slice(1).join('-') }}</p>
-        <el-button type="text" @click="dialog = true">{{tasksnum[1]==0?'':tasksnum[1]}}</el-button>
-        <el-dialog title="收货地址" :visible.sync="dialog">
-          <el-form :model="form">
-            <el-form-item label="活动名称" >
-              <el-input v-model="form.name" autocomplete="off"></el-input>
-            </el-form-item>
-            <el-form-item label="活动区域" >
-              <el-select v-model="form.region" placeholder="请选择活动区域">
-              <el-option label="区域一" value="shanghai"></el-option>
-              <el-option label="区域二" value="beijing"></el-option>
-              </el-select>
-            </el-form-item>
-          </el-form>
-          <div slot="footer" class="dialog-footer">
-            <el-button type="primary" @click="dialog = false">返 回</el-button>
-          </div>
-        </el-dialog>
-      </template>
-    </el-calendar>
-  </div>
+  <el-collapse v-loading="loading">
+    <el-collapse-item v-for="t in tasks" :key="t.id" :title="t.name">
+      <Task :task="t" :time="[t.startdt,t.overdt]"></Task>
+    </el-collapse-item>
+  </el-collapse>
 </template>
 <script>
-export default{
-  name:'TaskList',
-  data(){
+import Task from "./Task.vue";
+export default {
+  name: "TaskList",
+  components: {
+    Task,
+  },
+  data() {
     return {
-      dialog:false,
-      form:{
-        name:'test',
-        region:'diqu'
-      },
-      tasksnum:[0,1,2]
+      tasks: {},
+      tasksnum: { "2020-8-16": 2 },
+      loading: true,
     };
-  }
-}
+  },
+  created: function () {
+    console.log(this.tasksnum["2020-8-16"]);
+    this.$axios
+      .get("http://pi.deadpoetspoon.xyz:7900/tasks/?format=json")
+      .then((response) => {
+        var data = this;
+        //console.log(response.data);
+        response.data.forEach((task) => {
+          console.log(typeof task.startdt);
+        });
+        data.tasks = response.data;
+        this.loading = false;
+      })
+      .catch((error) => {
+        // 请求失败处理
+        console.log(error);
+        this.$message({
+          showClose: true,
+          message: error,
+          type: "error",
+        });
+      });
+  },
+};
 </script>
 <style>
 </style>
